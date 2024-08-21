@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "d-proj"
+version = "0.1.0"
+description = ""
+authors = ["Anton Korol <korol142@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+requests = "^2.32.3"
+requests-html = "^0.10.0"
+beautifulsoup4 = "^4.12.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
