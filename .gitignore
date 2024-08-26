@@ -161,3 +161,4 @@ cython_debug/
 .idea/
 
 desc.txt
+for_dev.txt

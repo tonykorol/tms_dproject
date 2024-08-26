@@ -11,8 +11,27 @@ python = "^3.12"
 requests = "^2.32.3"
 requests-html = "^0.10.0"
 beautifulsoup4 = "^4.12.3"
+sqlalchemy = "^2.0.32"
+psycopg2-binary = "^2.9.9"
+alembic = "^1.13.2"
+fastapi = {extras = ["all"], version = "^0.112.1"}
 
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.8.0"
+flake8 = "^7.1.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
+target-version = ['py312']
+include = '\pyu?$'
+
+[tool.flake8]
+exclude = ['tests', '.venv', 'venv', 'deploy', 'tmp_*.py']
+ignore = ['W503', 'E203', 'C901']
+max-complexity = 10
+max-line-length = 120
