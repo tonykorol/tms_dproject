@@ -8,6 +8,9 @@ from requests import get
 from time import sleep
 
 import locale
+
+from database.database import engine
+
 locale.setlocale(locale.LC_ALL, '')
 
 SITE_URL = "https://abw.by"
@@ -65,98 +68,112 @@ class AbwParser:
             date = datetime.strptime(f"{day_now} {month_now} {year_now}", "%d %B %Y")
         return date
 
-    def get_items(self, pages: int):
+    @staticmethod
+    def parse_publication_title(title: str) -> tuple:
+        title_parts = title.split(" ")
+        brand = title_parts[0]
+        model = title_parts[1]
+        generation = "".join(title_parts[2:(len(title_parts) - 1)])[:-1]
+        year = title_parts[len(title_parts) - 1]
+        return brand, model, generation, year
+
+
+    @staticmethod
+    def parse_publication_other_data(other_data: str) -> tuple:
+        other_data_parts = other_data.split(" / ")
+
+        if other_data_parts[2] != "электро":
+            engine_type = other_data_parts[3]
+            engine_hp = other_data_parts[2].replace(" л.с.", "")
+            engine_volume = other_data_parts[1].replace(" л", "")
+        else:
+            engine_type = other_data_parts[2]
+            engine_hp = other_data_parts[1].replace(" л.с.", "")
+            engine_volume = None
+
+        transmission_type = other_data_parts[4]
+        drive = other_data_parts[5]
+        mileage = other_data_parts[0].replace(" км", "")
+        body_type = other_data_parts[6]
+
+        return engine_type, engine_hp, engine_volume, transmission_type, drive, mileage, body_type
+
+
+    def get_publications(self, pages: int):
         for p in range(1, pages + 1):
             data = self.get_page_data(p)
             for item in data["list"]:
                 if isinstance(item["id"], int):
-                    publication_other_data = item["description"].split(" / ")
-                    publication_title = item["title"].split(" ")
-
-                    car_brand = publication_title[0]
-                    car_model = publication_title[1]
-                    car_model_generation = "".join(publication_title[2:(len(publication_title) - 1)])[:-1]
-                    car_year = publication_title[len(publication_title) - 1]
+                    car_brand, \
+                    car_model, \
+                    car_model_generation, \
+                    car_year = self.parse_publication_title(item.get("title"))
 
                     publication_id = item["id"]
                     publication_images = item["images"]
-
                     publication_price = int(item["price"]["usd"][:-4].replace(' ',''))
-
                     publication_link = f'{SITE_URL}{item["link"]}'
                     publication_description = item["text"]
                     publication_date = self.get_publication_date(item["date"]),
-
-                    if len(publication_other_data) >= 7:
-                        if publication_other_data[2] != "электро":
-                            car_engine_type = publication_other_data[3]
-                            car_engine_hp = publication_other_data[2].replace(" л.с.","")
-                            car_engine_volume = publication_other_data[1].replace(" л","")
-                            car_transmission_type = publication_other_data[4]
-                            car_drive = publication_other_data[5]
-                            car_mileage = publication_other_data[0].replace(" км","")
-                            car_body_type = publication_other_data[6]
-                        else:
-                            car_engine_type = publication_other_data[2]
-                            car_engine_hp = publication_other_data[1].replace(" л.с.","")
-                            car_engine_volume = None
-                            car_transmission_type = publication_other_data[4]
-                            car_drive = publication_other_data[5]
-                            car_mileage = publication_other_data[0].replace(" км","")
-                            car_body_type = publication_other_data[6]
-                    else:
-                        print(f"{item["id"]} NOT FULL DATA\n{SITE_URL}{item["link"]}")
+                    try:
+                        car_engine_type, \
+                        car_engine_hp, \
+                        car_engine_volume, \
+                        car_transmission_type, \
+                        car_drive, \
+                        car_mileage, \
+                        car_body_type = self.parse_publication_other_data(item["description"])
+                    except IndexError as e:
+                        print(f"NOT FULL DATA {item['id']} \n{SITE_URL}{item["link"]}, {e}")
                         continue
 
-                    self.publications.append(
-                        {
-                            "id": publication_id,
-                            "publication_date": publication_date[0],
-                            "link": publication_link,
-                            "images": publication_images,
-                            "description": publication_description,
-                            "engine_type": car_engine_type,
-                            "engine_hp": car_engine_hp,
-                            "engine_volume": car_engine_volume,
-                            "transmission_type": car_transmission_type,
-                            "car_drive": car_drive,
-                            "mileage": car_mileage,
-                            "car_year": car_year,
-                            "car_body_type": car_body_type,
+                    publication = {
+                        "id": publication_id,
+                        "publication_date": publication_date[0],
+                        "link": publication_link,
+                        "images": publication_images,
+                        "description": publication_description,
+                        "engine_type": car_engine_type,
+                        "engine_hp": car_engine_hp,
+                        "engine_volume": car_engine_volume,
+                        "transmission_type": car_transmission_type,
+                        "car_drive": car_drive,
+                        "mileage": car_mileage,
+                        "car_year": car_year,
+                        "car_body_type": car_body_type,
+                        "price": publication_price,
+                        "car_model": {
+                            "brand": car_brand,
+                            "model": car_model,
+                            "generation": car_model_generation,
+                        },
+                        "site_name": "awb.by",
+                        "site_url": SITE_URL,
 
-                            "price": publication_price,
-
-                            "car_model": {
-                                "brand": car_brand,
-                                "model": car_model,
-                                "generation": car_model_generation,
-                            },
-
-                            "site_name": "awb.by",
-                            "site_url": SITE_URL,
-
-                        }
-                    )
+                    }
+                    self.save_publication(publication)
             sleep(2)
 
-    def save_items(self):
-        with open("data.json", "w") as file:
+    def save_publication(self, pub):
+        self.publications.append(pub)
+
+    def save_json(self):
+        with open("data.json", 'w') as file:
             data = json.dumps(self.publications, indent=4)
             file.write(data)
 
-
     def get_data(self) -> list:
-        self.get_items(1)
+        self.get_publications(pages=1)
         return self.publications
 
 
 if __name__ == "__main__":
     abw = AbwParser()
     # pages = get_pages_list()
-    # get_items(pages)
-    # abw.get_items(1)
-    # abw.save_items()
-    print(abw.get_data())
+    # get_publications(pages)
+    # abw.get_publications(1)
+    # abw.save_json()
+    # print(abw.get_data())
     # abw.get_publication_date("16 Августа 2024")
     # abw.get_publication_date("вчера в 20:23")
     # abw.get_publication_date("сегодня в 20:23")
