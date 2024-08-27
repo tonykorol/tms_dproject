@@ -162,3 +162,5 @@ cython_debug/
 
 desc.txt
 for_dev.txt
+s.py
+/scrappers/av_by/

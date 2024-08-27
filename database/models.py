@@ -27,7 +27,7 @@ class Publication(Base):
     description: Mapped[str] = mapped_column(Text)
     engine_type: Mapped[str] = mapped_column(String(50))
     engine_hp: Mapped[str] = mapped_column(String(10))
-    engine_volume: Mapped[str] = mapped_column(String(10))
+    engine_volume: Mapped[str] = mapped_column(String(10), nullable=True)
     transmission_type: Mapped[str] = mapped_column(String(10))
     car_drive: Mapped[str] = mapped_column(String(20))
     mileage: Mapped[str] = mapped_column(String(10))

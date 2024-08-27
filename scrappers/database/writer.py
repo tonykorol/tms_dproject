@@ -1,3 +1,7 @@
+from datetime import datetime, UTC
+
+from sqlalchemy.orm import Session
+
 from database.database import get_session
 from database.models import Publication, Site, CarModel, PublicationPrice
 from scrappers.awb_by.awb_scrapper import AbwParser
@@ -7,8 +11,12 @@ def write_to_database(data):
     session_generator = get_session()
     session = next(session_generator)
     try:
-
         for item in data:
+            publication = session.query(Publication).filter_by(publication_id=item.get("id")).first()
+            if publication is not None:
+                upgrade_pub_data(publication, item, session)
+                continue
+
             site_name = item.get("site_name")
             site = session.query(Site).filter_by(name=site_name).first()
 
@@ -60,6 +68,21 @@ def write_to_database(data):
             session.commit()
     finally:
         session_generator.close()
+
+
+def upgrade_pub_data(publication: Publication, new_data: dict, session: Session):
+    current_price = session.query(PublicationPrice).filter(PublicationPrice.publication_id == publication.id).order_by(PublicationPrice.price_date.desc()).first()
+    exist_price = new_data.get("price")
+    if current_price.price == exist_price:
+        return
+    price = PublicationPrice(
+        price=new_data.get("price"),
+        price_date=datetime.now(UTC),
+        publication=publication,
+    )
+    session.add(price)
+    session.commit()
+
 
 if __name__ == "__main__":
     abw = AbwParser()

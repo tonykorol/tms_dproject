@@ -40,18 +40,18 @@ class AbwParser:
         return {"User-agent": choice(self.user_agents)}
 
     @staticmethod
-    def get_pages_list():
+    def get_pages_list() -> int:
         response = get(SITE_API_URL)
         pages = response.json()["pagination"]["pages"]
         return pages
 
-    def get_page_data(self, page: int):
+    def get_page_data(self, page: int) -> json:
         response = get(SITE_API_URL, params={"page": page}, headers=self.get_headers())
         if response.status_code == 200:
             return response.json()
 
     @staticmethod
-    def get_publication_date(string: str) -> float:
+    def get_publication_date(string: str) -> datetime:
         month_now: int = datetime.now().strftime("%B")
         year_now: int = datetime.now().strftime("%Y")
 
@@ -63,7 +63,6 @@ class AbwParser:
             else:
                 day_now = datetime.now().strftime("%d")
             date = datetime.strptime(f"{day_now} {month_now} {year_now}", "%d %B %Y")
-        # print(date)
         return date
 
     def get_items(self, pages: int):
@@ -146,7 +145,7 @@ class AbwParser:
             file.write(data)
 
 
-    def get_data(self):
+    def get_data(self) -> list:
         self.get_items(1)
         return self.publications
 
