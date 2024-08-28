@@ -28,3 +28,22 @@ class Publication:
     car_model: CarModel
     site_name: str
     site_url: str
+
+
+@dataclass
+class PublicationOtherData:
+    engine_type: str
+    engine_hp: str
+    engine_volume: str
+    transmission_type: str
+    drive: str
+    mileage: str
+    body_type: str
+
+
+@dataclass
+class PublicationTitleData:
+    car_brand: str
+    car_model: str
+    car_model_generation: str
+    car_year: str

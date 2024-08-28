@@ -23,7 +23,6 @@ class Publication(Base):
     publication_id: Mapped[int] = mapped_column(Integer)
     publication_date: Mapped[datetime]
     link: Mapped[str] = mapped_column(String(75), unique=True)
-    images: Mapped[list[str]] = mapped_column(ARRAY(String))
     description: Mapped[str] = mapped_column(Text)
     engine_type: Mapped[str] = mapped_column(String(50))
     engine_hp: Mapped[str] = mapped_column(String(10))
@@ -38,6 +37,7 @@ class Publication(Base):
     site: Mapped["Site"] = relationship(back_populates="publications")
 
     prices: Mapped[List["PublicationPrice"]] = relationship(back_populates="publication")
+    images: Mapped[List["PublicationImage"]] = relationship(back_populates="publication")
 
     car_model_id: Mapped[int] = mapped_column(ForeignKey("car_models.id"))
     car_model: Mapped[List["CarModel"]] = relationship(back_populates="publications")
@@ -52,6 +52,16 @@ class PublicationPrice(Base):
 
     publication_id: Mapped[int] = mapped_column(ForeignKey("publications.id"))
     publication: Mapped["Publication"] = relationship(back_populates="prices")
+
+
+class PublicationImage(Base):
+    __tablename__ = "publication_images"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    url: Mapped[str] = mapped_column(String)
+
+    publication_id: Mapped[int] = mapped_column(ForeignKey("publications.id"))
+    publication: Mapped["Publication"] = relationship(back_populates="images")
 
 
 class CarModel(Base):

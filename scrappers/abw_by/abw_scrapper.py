@@ -9,15 +9,14 @@ from time import sleep
 
 import locale
 
-from scrappers.data_classes import Publication, CarModel
+from scrappers.data_classes import Publication, CarModel, PublicationOtherData
 
 locale.setlocale(locale.LC_ALL, '')
 
-SITE_URL = "https://abw.by"
-SITE_API_URL = "https://b.abw.by/api/v2/adverts/list/cars"
-
 
 class AbwParser:
+    SITE_URL = "https://abw.by"
+    SITE_API_URL = "https://b.abw.by/api/v2/adverts/list/cars"
     publications: list = []
     user_agents: list = [
         "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101 Firefox/45.0",
@@ -42,14 +41,13 @@ class AbwParser:
     def get_headers(self):
         return {"User-agent": choice(self.user_agents)}
 
-    @staticmethod
-    def get_pages_list() -> int:
-        response = get(SITE_API_URL)
+    def get_pages_list(self) -> int:
+        response = get(self.SITE_API_URL)
         pages = response.json()["pagination"]["pages"]
         return pages
 
     def get_page_data(self, page: int) -> json:
-        response = get(SITE_API_URL, params={"page": page}, headers=self.get_headers())
+        response = get(self.SITE_API_URL, params={"page": page}, headers=self.get_headers())
         if response.status_code == 200:
             return response.json()
 
@@ -79,7 +77,7 @@ class AbwParser:
 
 
     @staticmethod
-    def parse_publication_other_data(other_data: str) -> tuple:
+    def parse_publication_other_data(other_data: str) -> PublicationOtherData:
         other_data_parts = other_data.split(" / ")
 
         if other_data_parts[2] != "электро":
@@ -96,10 +94,12 @@ class AbwParser:
         mileage = other_data_parts[0].replace(" км", "")
         body_type = other_data_parts[6]
 
-        return engine_type, engine_hp, engine_volume, transmission_type, drive, mileage, body_type
+        pub_other_data = PublicationOtherData(
+            engine_type, engine_hp, engine_volume, transmission_type, drive, mileage, body_type
+        )
+        return pub_other_data
 
-
-    def get_publications(self, pages: int):
+    def get_publications_data(self, pages: int):
         for p in range(1, pages + 1):
             data = self.get_page_data(p)
             for item in data["list"]:
@@ -112,20 +112,21 @@ class AbwParser:
                     publication_id = item["id"]
                     publication_images = item["images"]
                     publication_price = int(item["price"]["usd"][:-4].replace(' ',''))
-                    publication_link = f'{SITE_URL}{item["link"]}'
+                    publication_link = f'{self.SITE_URL}{item["link"]}'
                     publication_description = item["text"]
                     publication_date = self.get_publication_date(item["date"]),
                     try:
-                        car_engine_type, \
-                        car_engine_hp, \
-                        car_engine_volume, \
-                        car_transmission_type, \
-                        car_drive, \
-                        car_mileage, \
-                        car_body_type = self.parse_publication_other_data(item["description"])
+                        other_data = self.parse_publication_other_data(item["description"])
                     except IndexError as e:
-                        print(f"NOT FULL DATA {item['id']} \n{SITE_URL}{item["link"]}, {e}")
+                        print(f"NOT FULL DATA {item['id']} \n{self.SITE_URL}{item["link"]}, {e}")
                         continue
+                    car_engine_type = other_data.engine_type
+                    car_engine_hp = other_data.engine_hp
+                    car_engine_volume = other_data.engine_volume
+                    car_transmission_type = other_data.transmission_type
+                    car_drive = other_data.drive
+                    car_mileage = other_data.engine_hp = other_data.mileage
+                    car_body_type = other_data.body_type
 
                     car = CarModel(
                         brand=car_brand,
@@ -150,7 +151,7 @@ class AbwParser:
                         price=publication_price,
                         car_model=car,
                         site_name="abw.by",
-                        site_url=SITE_URL,
+                        site_url=self.SITE_URL,
                     )
                     self.save_publication(publication)
             sleep(2)
@@ -164,7 +165,7 @@ class AbwParser:
             file.write(data)
 
     def get_data(self) -> list:
-        self.get_publications(pages=1)
+        self.get_publications_data(pages=1)
         return self.publications
 
 

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from database.database import get_session
 from scrappers.data_classes import Publication as PublicationData
-from database.models import Publication as PublicationModel, PublicationPrice, Site, CarModel
+from database.models import Publication as PublicationModel, PublicationPrice, Site, CarModel, PublicationImage
 
 
 def save_publications(data: PublicationData):
@@ -17,6 +17,7 @@ def save_publications(data: PublicationData):
             site = get_site(item, session)
             car_model = get_car_model(item, session)
             new_publication = add_publication(item, site, car_model, session)
+            save_images(item, new_publication, session)
             save_price(new_publication, item, session)
             session.commit()
 
@@ -46,12 +47,11 @@ def get_car_model(item: PublicationData, session: Session) -> CarModel:
         session.add(car_model)
     return car_model
 
-def add_publication(item, site, car_model, session: Session) -> PublicationModel:
+def add_publication(item: PublicationData, site: Site, car_model: CarModel, session: Session) -> PublicationModel:
     publication = PublicationModel(
         publication_id=item.id,
         publication_date=item.publication_date,
         link=item.link,
-        images=item.images,
         description=item.description,
         engine_type=item.engine_type,
         engine_hp=item.engine_hp,
@@ -66,7 +66,15 @@ def add_publication(item, site, car_model, session: Session) -> PublicationModel
     session.add(publication)
     return publication
 
-def save_price(publication, item, session: Session):
+def save_images(item: PublicationData, publication: PublicationModel, session: Session):
+    for img in item.images:
+        image = PublicationImage(
+            url=img,
+            publication=publication
+        )
+        session.add(image)
+
+def save_price(publication: PublicationModel, item: PublicationData, session: Session):
     price = PublicationPrice(
         price=item.price,
         price_date=item.publication_date,
