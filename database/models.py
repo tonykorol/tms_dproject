@@ -1,7 +1,7 @@
 from datetime import datetime, UTC
 from typing import List
 
-from sqlalchemy import Text, String, Integer, ARRAY, ForeignKey, TIMESTAMP, DateTime
+from sqlalchemy import Text, String, Integer, ARRAY, ForeignKey, TIMESTAMP, DateTime, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.database import Base
@@ -31,7 +31,7 @@ class Publication(Base):
     car_drive: Mapped[str] = mapped_column(String(20))
     mileage: Mapped[str] = mapped_column(String(10))
     car_year: Mapped[int] = mapped_column(Integer)
-
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     site_id: Mapped[int] = mapped_column(ForeignKey("sites.id"))
     site: Mapped["Site"] = relationship(back_populates="publications")

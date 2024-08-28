@@ -9,7 +9,7 @@ from time import sleep
 
 import locale
 
-from scrappers.data_classes import Publication, CarModel, PublicationOtherData
+from scrappers.data_classes import Publication, CarModel, PublicationOtherData, PublicationTitleData
 
 locale.setlocale(locale.LC_ALL, '')
 
@@ -67,13 +67,17 @@ class AbwParser:
         return date
 
     @staticmethod
-    def parse_publication_title(title: str) -> tuple:
-        title_parts = title.split(" ")
-        brand = title_parts[0]
-        model = title_parts[1]
-        generation = "".join(title_parts[2:(len(title_parts) - 1)])[:-1]
-        year = title_parts[len(title_parts) - 1]
-        return brand, model, generation, year
+    def parse_publication_title_data(title: str) -> PublicationTitleData:
+        title_data_parts = title.split(" ")
+
+        brand = title_data_parts[0]
+        model = title_data_parts[1]
+        generation = "".join(title_data_parts[2:(len(title_data_parts) - 1)])[:-1]
+        year = title_data_parts[len(title_data_parts) - 1]
+        title_data = PublicationTitleData(
+            brand, model, generation, year
+        )
+        return title_data
 
 
     @staticmethod
@@ -104,50 +108,39 @@ class AbwParser:
             data = self.get_page_data(p)
             for item in data["list"]:
                 if isinstance(item["id"], int):
-                    car_brand, \
-                    car_model, \
-                    car_model_generation, \
-                    car_year = self.parse_publication_title(item.get("title"))
-
                     publication_id = item["id"]
                     publication_images = item["images"]
                     publication_price = int(item["price"]["usd"][:-4].replace(' ',''))
                     publication_link = f'{self.SITE_URL}{item["link"]}'
                     publication_description = item["text"]
-                    publication_date = self.get_publication_date(item["date"]),
+                    publication_date = self.get_publication_date(item["date"])
+                    title_data = self.parse_publication_title_data(item["title"])
                     try:
                         other_data = self.parse_publication_other_data(item["description"])
                     except IndexError as e:
                         print(f"NOT FULL DATA {item['id']} \n{self.SITE_URL}{item["link"]}, {e}")
                         continue
-                    car_engine_type = other_data.engine_type
-                    car_engine_hp = other_data.engine_hp
-                    car_engine_volume = other_data.engine_volume
-                    car_transmission_type = other_data.transmission_type
-                    car_drive = other_data.drive
-                    car_mileage = other_data.engine_hp = other_data.mileage
-                    car_body_type = other_data.body_type
 
                     car = CarModel(
-                        brand=car_brand,
-                        model=car_model,
-                        generation=car_model_generation,
+                        brand=title_data.car_brand,
+                        model=title_data.car_model,
+                        generation=title_data.car_model_generation,
                     )
 
                     publication = Publication(
                         id=publication_id,
-                        publication_date=publication_date[0],
+                        publication_date=publication_date,
                         link=publication_link,
                         images=publication_images,
                         description=publication_description,
-                        engine_type=car_engine_type,
-                        engine_hp=car_engine_hp,
-                        engine_volume=car_engine_volume,
-                        transmission_type=car_transmission_type,
-                        car_drive=car_drive,
-                        mileage=car_mileage,
-                        car_year=car_year,
-                        car_body_type=car_body_type,
+                        engine_type=other_data.engine_type,
+                        engine_hp=other_data.engine_hp,
+                        engine_volume=other_data.engine_volume,
+                        transmission_type=other_data.transmission_type,
+                        car_drive=other_data.drive,
+                        mileage=other_data.mileage,
+                        car_year=title_data.car_year,
+                        car_body_type=other_data.body_type,
                         price=publication_price,
                         car_model=car,
                         site_name="abw.by",
