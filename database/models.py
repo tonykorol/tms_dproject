@@ -60,7 +60,7 @@ class CarModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     brand: Mapped[str] = mapped_column(String(20))
     model: Mapped[str] = mapped_column(String(20))
-    generation: Mapped[str] = mapped_column(String(25))
+    generation: Mapped[str] = mapped_column(String(30))
 
     publications: Mapped[List["Publication"]] = relationship(back_populates="car_model")
 

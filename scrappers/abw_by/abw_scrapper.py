@@ -9,7 +9,7 @@ from time import sleep
 
 import locale
 
-from database.database import engine
+from scrappers.data_classes import Publication, CarModel
 
 locale.setlocale(locale.LC_ALL, '')
 
@@ -127,30 +127,31 @@ class AbwParser:
                         print(f"NOT FULL DATA {item['id']} \n{SITE_URL}{item["link"]}, {e}")
                         continue
 
-                    publication = {
-                        "id": publication_id,
-                        "publication_date": publication_date[0],
-                        "link": publication_link,
-                        "images": publication_images,
-                        "description": publication_description,
-                        "engine_type": car_engine_type,
-                        "engine_hp": car_engine_hp,
-                        "engine_volume": car_engine_volume,
-                        "transmission_type": car_transmission_type,
-                        "car_drive": car_drive,
-                        "mileage": car_mileage,
-                        "car_year": car_year,
-                        "car_body_type": car_body_type,
-                        "price": publication_price,
-                        "car_model": {
-                            "brand": car_brand,
-                            "model": car_model,
-                            "generation": car_model_generation,
-                        },
-                        "site_name": "awb.by",
-                        "site_url": SITE_URL,
+                    car = CarModel(
+                        brand=car_brand,
+                        model=car_model,
+                        generation=car_model_generation,
+                    )
 
-                    }
+                    publication = Publication(
+                        id=publication_id,
+                        publication_date=publication_date[0],
+                        link=publication_link,
+                        images=publication_images,
+                        description=publication_description,
+                        engine_type=car_engine_type,
+                        engine_hp=car_engine_hp,
+                        engine_volume=car_engine_volume,
+                        transmission_type=car_transmission_type,
+                        car_drive=car_drive,
+                        mileage=car_mileage,
+                        car_year=car_year,
+                        car_body_type=car_body_type,
+                        price=publication_price,
+                        car_model=car,
+                        site_name="abw.by",
+                        site_url=SITE_URL,
+                    )
                     self.save_publication(publication)
             sleep(2)
 
@@ -167,8 +168,8 @@ class AbwParser:
         return self.publications
 
 
-if __name__ == "__main__":
-    abw = AbwParser()
+# if __name__ == "__main__":
+#     abw = AbwParser()
     # pages = get_pages_list()
     # get_publications(pages)
     # abw.get_publications(1)
