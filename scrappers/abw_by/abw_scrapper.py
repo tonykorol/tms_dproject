@@ -1,3 +1,4 @@
+import re
 import json
 from datetime import timedelta
 
@@ -55,7 +56,6 @@ class AbwParser:
     def get_publication_date(string: str) -> datetime:
         month_now: int = datetime.now().strftime("%B")
         year_now: int = datetime.now().strftime("%Y")
-
         try:
             date = datetime.strptime(string, "%d %B %Y")
         except ValueError:
@@ -79,24 +79,43 @@ class AbwParser:
         )
         return title_data
 
-
     @staticmethod
     def parse_publication_other_data(other_data: str) -> PublicationOtherData:
-        other_data_parts = other_data.split(" / ")
+        engine_type = ""
+        engine_hp = ""
+        engine_volume = ""
+        transmission_type = ""
+        drive = ""
+        mileage = ""
+        body_type = ""
 
-        if other_data_parts[2] != "электро":
-            engine_type = other_data_parts[3]
-            engine_hp = other_data_parts[2].replace(" л.с.", "")
-            engine_volume = other_data_parts[1].replace(" л", "")
-        else:
-            engine_type = other_data_parts[2]
-            engine_hp = other_data_parts[1].replace(" л.с.", "")
-            engine_volume = None
+        if mileage_match := re.search(r'(\d+(\s\d+)?)\s*км', other_data):
+            mileage = mileage_match.group(1)
 
-        transmission_type = other_data_parts[4]
-        drive = other_data_parts[5]
-        mileage = other_data_parts[0].replace(" км", "")
-        body_type = other_data_parts[6]
+        if engine_volume_match := re.search(r'(\d+(\.\d+)?)\s*л', other_data):
+            engine_volume = engine_volume_match.group(1)
+
+        if engine_hp_match := re.search(r'(\d+)\s*л\.с\.', other_data):
+            engine_hp = engine_hp_match.group(1)
+
+        if engine_type_match := re.search(r'(?<=\s)(бензин|дизель|электро|газ|гибрид|гидроген)(?=\s)', other_data):
+            engine_type = engine_type_match.group(0)
+
+        if transmission_type_match := re.search(r'(?<=\s)(автомат|механика|робот|вариатор)(?=\s)', other_data):
+            transmission_type = transmission_type_match.group(0)
+
+        if drive_match := re.search(r'(?<=\s)(полный|передний|задний)(?=\s)', other_data):
+            drive = drive_match.group(0)
+
+        pattern = re.compile(r'''
+            (?<=\s)
+            (внедорожник|кабриолет|купе|лимузин|
+             лифтбек|микроавтобус/бус|минивен|пикап|
+             универсал|седан|фургон|хэтчбек)
+            (?=\s)
+        ''', re.VERBOSE)
+        if body_type_match := re.search(pattern, other_data):
+            body_type = body_type_match.group(0)
 
         pub_other_data = PublicationOtherData(
             engine_type, engine_hp, engine_volume, transmission_type, drive, mileage, body_type
@@ -115,11 +134,7 @@ class AbwParser:
                     publication_description = item["text"]
                     publication_date = self.get_publication_date(item["date"])
                     title_data = self.parse_publication_title_data(item["title"])
-                    try:
-                        other_data = self.parse_publication_other_data(item["description"])
-                    except IndexError as e:
-                        print(f"NOT FULL DATA {item['id']} \n{self.SITE_URL}{item["link"]}, {e}")
-                        continue
+                    other_data = self.parse_publication_other_data(item["description"])
 
                     car = CarModel(
                         brand=title_data.car_brand,
