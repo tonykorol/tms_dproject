@@ -15,8 +15,15 @@ class Base(DeclarativeBase):
     pass
 
 
-@contextmanager
 def get_session():
+    session = SessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+@contextmanager
+def get_session_for_scrappers():
     session = SessionLocal()
     try:
         yield session

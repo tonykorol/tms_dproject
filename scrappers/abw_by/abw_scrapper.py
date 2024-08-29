@@ -39,7 +39,7 @@ class AbwParser:
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 YaBrowser/21.2.2.101 Yowser/2.5 Safari/537.36",
     ]
 
-    def get_headers(self):
+    def get_headers(self) -> dict:
         return {"User-agent": choice(self.user_agents)}
 
     def get_pages_list(self) -> int:
@@ -89,7 +89,7 @@ class AbwParser:
         mileage = ""
         body_type = ""
 
-        if mileage_match := re.search(r'(\d+(\s\d+)?)\s*км', other_data):
+        if mileage_match := re.search(r'(?<=\s)(\d+(\s\d+)?)\s*км', other_data):
             mileage = mileage_match.group(1)
 
         if engine_volume_match := re.search(r'(\d+(\.\d+)?)\s*л', other_data):
@@ -122,7 +122,7 @@ class AbwParser:
         )
         return pub_other_data
 
-    def get_publications_data(self, pages: int):
+    def get_publications_data(self, pages: int) -> None:
         for p in range(1, pages + 1):
             data = self.get_page_data(p)
             for item in data["list"]:
@@ -164,10 +164,10 @@ class AbwParser:
                     self.save_publication(publication)
             sleep(2)
 
-    def save_publication(self, pub):
+    def save_publication(self, pub) -> None:
         self.publications.append(pub)
 
-    def save_json(self):
+    def save_json(self) -> None:
         with open("data.json", 'w') as file:
             data = json.dumps(self.publications, indent=4)
             file.write(data)

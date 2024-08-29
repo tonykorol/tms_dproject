@@ -100,7 +100,7 @@ class Role(Base):
     __tablename__ = "roles"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(10))\
+    name: Mapped[str] = mapped_column(String(10))
 
     users: Mapped[List["User"]] = relationship(back_populates="role")
 
@@ -114,7 +114,7 @@ class User(Base):
     password: Mapped[str]
     registered_at: Mapped[datetime] = mapped_column(default=datetime.now(UTC))
 
-    role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"))
+    role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), default=2)
     role: Mapped[List["Role"]] = relationship(back_populates="users")
 
     favorites: Mapped[list["Favorite"]] = relationship(secondary="users_favorites", back_populates="users")

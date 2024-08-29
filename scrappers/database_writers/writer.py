@@ -2,13 +2,13 @@ from datetime import datetime, UTC
 
 from sqlalchemy.orm import Session
 
-from database.database import get_session
+from database.database import get_session_for_scrappers
 from scrappers.data_classes import Publication as PublicationData
 from database.models import Publication as PublicationModel, PublicationPrice, Site, CarModel, PublicationImage
 
 
-def save_publications(data: PublicationData):
-    with get_session() as session:
+def save_publications(data: PublicationData) -> None:
+    with get_session_for_scrappers() as session:
         update_publications_status(data, session)
         for item in data:
             publication = session.query(PublicationModel).filter_by(publication_id=item.id).first()
@@ -22,7 +22,7 @@ def save_publications(data: PublicationData):
             save_price(new_publication, item, session)
         session.commit()
 
-def update_publications_status(current_publications: PublicationData, session: Session):
+def update_publications_status(current_publications: PublicationData, session: Session) -> None:
     existing_publications = session.query(PublicationModel).all()
     current_ids: set = set()
     for pub in current_publications:
@@ -76,7 +76,7 @@ def add_publication(item: PublicationData, site: Site, car_model: CarModel, sess
     session.add(publication)
     return publication
 
-def save_images(item: PublicationData, publication: PublicationModel, session: Session):
+def save_images(item: PublicationData, publication: PublicationModel, session: Session) -> None:
     for img in item.images:
         image = PublicationImage(
             url=img,
@@ -84,7 +84,7 @@ def save_images(item: PublicationData, publication: PublicationModel, session: S
         )
         session.add(image)
 
-def save_price(publication: PublicationModel, item: PublicationData, session: Session):
+def save_price(publication: PublicationModel, item: PublicationData, session: Session) -> None:
     price = PublicationPrice(
         price=item.price,
         price_date=item.publication_date,
@@ -92,7 +92,7 @@ def save_price(publication: PublicationModel, item: PublicationData, session: Se
     )
     session.add(price)
 
-def upgrade_pub_data(publication: PublicationModel, new_data: PublicationData, session: Session):
+def upgrade_pub_data(publication: PublicationModel, new_data: PublicationData, session: Session) -> None:
     current_price = session.query(PublicationPrice).filter(PublicationPrice.publication_id == publication.id).order_by(PublicationPrice.price_date.desc()).first()
     exist_price = new_data.price
     publication.is_active = True
