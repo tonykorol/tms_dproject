@@ -1,7 +1,7 @@
 from datetime import datetime, UTC
 from typing import List
 
-from sqlalchemy import Text, String, Integer, ARRAY, ForeignKey, TIMESTAMP, DateTime, Boolean
+from sqlalchemy import Text, String, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.database import Base
