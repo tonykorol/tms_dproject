@@ -73,7 +73,7 @@ class AbwParser:
         brand = title_data_parts[0]
         model = title_data_parts[1]
         generation = "".join(title_data_parts[2:(len(title_data_parts) - 1)])[:-1]
-        year = title_data_parts[len(title_data_parts) - 1]
+        year = int(title_data_parts[len(title_data_parts) - 1])
         title_data = PublicationTitleData(
             brand, model, generation, year
         )
@@ -89,7 +89,7 @@ class AbwParser:
         mileage = ""
         body_type = ""
 
-        if mileage_match := re.search(r'(?<=\s)(\d+(\s\d+)?)\s*км', other_data):
+        if mileage_match := re.search(r'(\d+(\s\d+)?)\s*км', other_data):
             mileage = mileage_match.group(1)
 
         if engine_volume_match := re.search(r'(\d+(\.\d+)?)\s*л', other_data):

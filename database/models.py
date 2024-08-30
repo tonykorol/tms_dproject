@@ -1,7 +1,8 @@
 from datetime import datetime, UTC
 from typing import List
 
-from sqlalchemy import Text, String, Integer, ForeignKey, Boolean
+from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
+from sqlalchemy import Text, String, Integer, ForeignKey, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.database import Base
@@ -96,25 +97,16 @@ class UsersFavorites(Base):
     favorite_id: Mapped[int] = mapped_column(ForeignKey("favorites.id"), primary_key=True)
 
 
-class Role(Base):
-    __tablename__ = "roles"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(10))
-
-    users: Mapped[List["User"]] = relationship(back_populates="role")
-
-
-class User(Base):
+class User(SQLAlchemyBaseUserTable[int], Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(String(150), unique=True)
-    email: Mapped[str] = mapped_column(String(256), unique=True)
-    password: Mapped[str]
-    registered_at: Mapped[datetime] = mapped_column(default=datetime.now(UTC))
-
-    role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), default=2)
-    role: Mapped[List["Role"]] = relationship(back_populates="users")
+    email: Mapped[str] = mapped_column(String(length=320), unique=True, index=True, nullable=False)
+    hashed_password: Mapped[str] = mapped_column( String(length=1024), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    registered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.now(UTC))
 
     favorites: Mapped[list["Favorite"]] = relationship(secondary="users_favorites", back_populates="users")

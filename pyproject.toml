@@ -11,13 +11,15 @@ python = "^3.12"
 requests = "^2.32.3"
 requests-html = "^0.10.0"
 beautifulsoup4 = "^4.12.3"
-sqlalchemy = "^2.0.32"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.32"}
 psycopg2-binary = "^2.9.9"
 alembic = "^1.13.2"
 fastapi = {extras = ["all"], version = "^0.112.1"}
 uvicorn = "^0.30.6"
 pydantic = {extras = ["email"], version = "^2.8.2"}
 passlib = "^1.7.4"
+asyncpg = "^0.29.0"
+fastapi-users = {extras = ["sqlalchemy"], version = "^13.0.0"}
 
 
 [tool.poetry.group.dev.dependencies]
