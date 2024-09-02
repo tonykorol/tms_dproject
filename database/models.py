@@ -14,7 +14,7 @@ class Site(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(15))
     url: Mapped[str] = mapped_column(String(15))
-    publications: Mapped[List["Publication"]] = relationship(back_populates="site")
+    publications: Mapped[List["Publication"]] = relationship(back_populates="site", cascade="all, delete")
 
 
 class Publication(Base):
@@ -22,7 +22,7 @@ class Publication(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     publication_id: Mapped[int] = mapped_column(Integer)
-    publication_date: Mapped[datetime]
+    publication_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     link: Mapped[str] = mapped_column(String(75), unique=True)
     description: Mapped[str] = mapped_column(Text)
     engine_type: Mapped[str] = mapped_column(String(50))
@@ -35,13 +35,16 @@ class Publication(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     site_id: Mapped[int] = mapped_column(ForeignKey("sites.id"))
-    site: Mapped["Site"] = relationship(back_populates="publications")
+    site: Mapped["Site"] = relationship(back_populates="publications", lazy='joined')
 
-    prices: Mapped[List["PublicationPrice"]] = relationship(back_populates="publication")
-    images: Mapped[List["PublicationImage"]] = relationship(back_populates="publication")
+    prices: Mapped[List["PublicationPrice"]] = relationship(back_populates="publication", lazy='joined', cascade="all, delete")
+    images: Mapped[List["PublicationImage"]] = relationship(back_populates="publication", lazy='joined', cascade="all, delete")
 
     car_model_id: Mapped[int] = mapped_column(ForeignKey("car_models.id"))
-    car_model: Mapped[List["CarModel"]] = relationship(back_populates="publications")
+    car_model: Mapped[List["CarModel"]] = relationship(back_populates="publications",  lazy='joined')
+
+    favorites: Mapped[List["Favorite"]] = relationship(back_populates="publication", cascade="all, delete")
+
 
 
 class PublicationPrice(Base):
@@ -49,10 +52,10 @@ class PublicationPrice(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     price: Mapped[int] = mapped_column(Integer)
-    price_date: Mapped[datetime]
+    price_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     publication_id: Mapped[int] = mapped_column(ForeignKey("publications.id"))
-    publication: Mapped["Publication"] = relationship(back_populates="prices")
+    publication: Mapped["Publication"] = relationship(back_populates="prices",  lazy='joined')
 
 
 class PublicationImage(Base):
@@ -62,7 +65,7 @@ class PublicationImage(Base):
     url: Mapped[str] = mapped_column(String)
 
     publication_id: Mapped[int] = mapped_column(ForeignKey("publications.id"))
-    publication: Mapped["Publication"] = relationship(back_populates="images")
+    publication: Mapped["Publication"] = relationship(back_populates="images", lazy='joined')
 
 
 class CarModel(Base):
@@ -73,21 +76,20 @@ class CarModel(Base):
     model: Mapped[str] = mapped_column(String(20))
     generation: Mapped[str] = mapped_column(String(30))
 
-    publications: Mapped[List["Publication"]] = relationship(back_populates="car_model")
+    publications: Mapped[List["Publication"]] = relationship(back_populates="car_model", cascade="all, delete")
 
-    favorites: Mapped[List["Favorite"]] = relationship(back_populates="model")
 
 
 class Favorite(Base):
     __tablename__ = "favorites"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    added_time: Mapped[datetime] = mapped_column(default=datetime.now(UTC))
+    added_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.now(UTC))
 
-    car_model_id: Mapped[int] = mapped_column(ForeignKey("car_models.id"))
-    model: Mapped["CarModel"] = relationship(back_populates="favorites")
+    publication_id: Mapped[int] = mapped_column(ForeignKey("publications.id"))
+    publication: Mapped["Publication"] = relationship(back_populates="favorites",  lazy='joined')
 
-    users: Mapped[list["User"]] = relationship(secondary="users_favorites", back_populates="favorites")
+    users: Mapped[list["User"]] = relationship(secondary="users_favorites", back_populates="favorites", lazy='joined')
 
 
 class UsersFavorites(Base):
@@ -109,4 +111,4 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     registered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.now(UTC))
 
-    favorites: Mapped[list["Favorite"]] = relationship(secondary="users_favorites", back_populates="users")
+    favorites: Mapped[list["Favorite"]] = relationship(secondary="users_favorites", back_populates="users", lazy='joined', cascade="all, delete")

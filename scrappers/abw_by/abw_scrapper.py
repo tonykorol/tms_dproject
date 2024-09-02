@@ -1,6 +1,7 @@
 import re
 import json
-from datetime import timedelta
+from calendar import month
+from datetime import timedelta, UTC
 
 from random import choice
 
@@ -54,15 +55,16 @@ class AbwParser:
 
     @staticmethod
     def get_publication_date(string: str) -> datetime:
-        month_now: int = datetime.now().strftime("%B")
-        year_now: int = datetime.now().strftime("%Y")
+        month_now: int = datetime.now(UTC).strftime("%B")
+        year_now: int = datetime.now(UTC).strftime("%Y")
         try:
             date = datetime.strptime(string, "%d %B %Y")
         except ValueError:
             if string.split(' ')[0] == "вчера":
-                day_now = (datetime.now() - timedelta(days=1)).strftime("%d")
+                day_now = (datetime.now(UTC) - timedelta(days=1)).strftime("%d")
+                month_now: int = (datetime.now(UTC) - timedelta(days=1)).strftime("%B")
             else:
-                day_now = datetime.now().strftime("%d")
+                day_now = datetime.now(UTC).strftime("%d")
             date = datetime.strptime(f"{day_now} {month_now} {year_now}", "%d %B %Y")
         return date
 
@@ -73,7 +75,7 @@ class AbwParser:
         brand = title_data_parts[0]
         model = title_data_parts[1]
         generation = "".join(title_data_parts[2:(len(title_data_parts) - 1)])[:-1]
-        year = int(title_data_parts[len(title_data_parts) - 1])
+        year = int(title_data_parts[len(title_data_parts) - 1][:4])
         title_data = PublicationTitleData(
             brand, model, generation, year
         )
@@ -173,17 +175,5 @@ class AbwParser:
             file.write(data)
 
     def get_data(self) -> list:
-        self.get_publications_data(pages=1)
+        self.get_publications_data(pages=2)
         return self.publications
-
-
-# if __name__ == "__main__":
-#     abw = AbwParser()
-    # pages = get_pages_list()
-    # get_publications(pages)
-    # abw.get_publications(1)
-    # abw.save_json()
-    # print(abw.get_data())
-    # abw.get_publication_date("16 Августа 2024")
-    # abw.get_publication_date("вчера в 20:23")
-    # abw.get_publication_date("сегодня в 20:23")

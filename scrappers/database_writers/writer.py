@@ -2,7 +2,6 @@ from datetime import datetime, UTC
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 
 from database.database import get_async_session
 from scrappers.data_classes import Publication as PublicationData
@@ -16,7 +15,7 @@ async def save_publications(data: PublicationData) -> None:
             publication = await session.execute(
                 select(PublicationModel).filter_by(publication_id=item.id)
             )
-            publication = publication.scalars().first()
+            publication = publication.unique().scalars().first()
             if publication is not None and not publication.is_active:
                 await upgrade_pub_data(publication, item, session)
                 continue
@@ -29,7 +28,7 @@ async def save_publications(data: PublicationData) -> None:
 
 async def update_publications_status(current_publications: PublicationData, session: AsyncSession) -> None:
     existing_publications = await session.execute(select(PublicationModel))
-    existing_publications = existing_publications.scalars().all()
+    existing_publications = existing_publications.unique().scalars().all()
     current_ids: set = {pub.id for pub in current_publications}
     for pub in existing_publications:
         if pub.id not in current_ids:
@@ -38,7 +37,7 @@ async def update_publications_status(current_publications: PublicationData, sess
 async def get_site(item: PublicationData, session: AsyncSession) -> Site:
     site_name = item.site_name
     site = await session.execute(select(Site).filter_by(name=site_name))
-    site = site.scalars().first()
+    site = site.unique().scalars().first()
     if not site:
         site = Site(name=site_name, url=item.site_url)
         session.add(site)
@@ -53,7 +52,7 @@ async def get_car_model(item: PublicationData, session: AsyncSession) -> CarMode
         model=car_model_name,
         generation=car_generation_name,
     ))
-    car_model = car_model.scalars().first()
+    car_model = car_model.unique().scalars().first()
     if not car_model:
         car_model = CarModel(
             brand=car_brand_name,
@@ -100,7 +99,7 @@ async def save_price(publication: PublicationModel, item: PublicationData, sessi
 
 async def upgrade_pub_data(publication: PublicationModel, new_data: PublicationData, session: AsyncSession) -> None:
     current_price = await session.execute(select(PublicationPrice).filter(PublicationPrice.publication_id == publication.id).order_by(PublicationPrice.price_date.desc()))
-    current_price = current_price.scalars().first()
+    current_price = current_price.unique().scalars().first()
     exist_price = new_data.price
     publication.is_active = True
     session.add(publication)

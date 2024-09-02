@@ -1,7 +1,9 @@
-from typing import Optional
+from typing import Optional, List
 
 from fastapi_users import schemas
 from pydantic import BaseModel, Field, EmailStr
+
+from app.publications.schemas import FavoriteSchema
 
 
 class UserReadSchema(schemas.BaseUser[int], BaseModel):
@@ -11,7 +13,7 @@ class UserReadSchema(schemas.BaseUser[int], BaseModel):
     is_active: bool = True
     is_superuser: bool = False
     is_verified: bool = False
-    # favorites: List[FavoritesSchema]
+    favorites: List[FavoriteSchema]
 
 
 class UserCreateSchema(schemas.BaseUserCreate, BaseModel):
