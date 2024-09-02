@@ -110,5 +110,6 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     registered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.now(UTC))
+    tg_chat_id: Mapped[int] = mapped_column(Integer, nullable=True)
 
     favorites: Mapped[list["Favorite"]] = relationship(secondary="users_favorites", back_populates="users", lazy='joined', cascade="all, delete")

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.database import get_async_session
 from scrappers.data_classes import Publication as PublicationData
 from database.models import Publication as PublicationModel, PublicationPrice, Site, CarModel, PublicationImage
+from scrappers.notifications.sender import sender
 
 
 async def save_publications(data: PublicationData) -> None:
@@ -111,3 +112,4 @@ async def upgrade_pub_data(publication: PublicationModel, new_data: PublicationD
         publication=publication,
     )
     session.add(price)
+    await sender(publication, price, session)
