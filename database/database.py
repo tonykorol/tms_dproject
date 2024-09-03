@@ -20,13 +20,39 @@ class Base(DeclarativeBase):
 
 @asynccontextmanager
 async def get_async_session() -> AsyncSession:
+    """
+    Asynchronously provides an SQLAlchemy session.
+
+    This function is used as a context manager to ensure that the
+    session is properly closed after use.
+
+    :return: An asynchronous SQLAlchemy session.
+    """
     async with AsyncSessionLocal() as session:
         yield session
 
 async def get_async_api_session() -> AsyncGenerator[AsyncSession, None]:
+    """
+    Asynchronously provides an SQLAlchemy session for API use.
+
+    This function yields an SQLAlchemy session that can be used in
+    API routes, ensuring proper session management.
+
+    :yield: An asynchronous SQLAlchemy session.
+    """
     async with AsyncSessionLocal() as session:
         yield session
 
 async def get_user_db(session: AsyncSession = Depends(get_async_api_session)):
+    """
+    Provides an instance of SQLAlchemyUserDatabase for user management.
+
+    This function uses dependency injection to provide a user database
+    instance, which can be used for user-related operations.
+
+    :param session: An asynchronous SQLAlchemy session (default is provided by get_async_api_session).
+
+    :yield: An instance of SQLAlchemyUserDatabase configured with the provided session and User model.
+    """
     from database.models import User
     yield SQLAlchemyUserDatabase(session, User)

@@ -1,6 +1,5 @@
 import re
 import json
-from calendar import month
 from datetime import timedelta, UTC
 
 from random import choice
@@ -41,20 +40,62 @@ class AbwParser:
     ]
 
     def get_headers(self) -> dict:
+        """
+        Select one user agent for headers.
+
+        This method randomly selects a user agent from the predefined list
+        of user agents to be used in HTTP requests. This helps in
+        mimicking requests from different browsers or devices.
+
+        :return: A dictionary containing a single key-value pair where
+                 the key is "User-agent" and the value is a randomly
+                 selected user agent string.
+        """
         return {"User-agent": choice(self.user_agents)}
 
     def get_pages_list(self) -> int:
+        """
+        Retrieve the total number of pages from the API.
+
+        This method sends a GET request to the API and parses the JSON
+        response to extract the total number of pages available for
+        navigation.
+
+        :return: An integer representing the total number of pages.
+        """
         response = get(self.SITE_API_URL)
         pages = response.json()["pagination"]["pages"]
         return pages
 
     def get_page_data(self, page: int) -> json:
+        """
+        Get data for a specific page from the API.
+
+        This method sends a GET request to the API with the specified
+        page number. If the request is successful, it returns the JSON
+        data for that page.
+
+        :param page: An integer representing the page number to retrieve.
+        :return: A JSON object containing the data for the specified page
+                 if the request is successful; otherwise, None.
+        """
         response = get(self.SITE_API_URL, params={"page": page}, headers=self.get_headers())
         if response.status_code == 200:
             return response.json()
 
     @staticmethod
     def get_publication_date(string: str) -> datetime:
+        """
+        Convert a publication date string into a datetime object.
+
+        This method takes a string representation of a date and attempts
+        to parse it into a datetime object. It supports various formats,
+        including "вчера" (yesterday). If the format is unrecognized,
+        it defaults to the current date.
+
+        :param string: A string representing the publication date.
+        :return: A datetime object representing the parsed date.
+        """
         month_now: int = datetime.now(UTC).strftime("%B")
         year_now: int = datetime.now(UTC).strftime("%Y")
         try:
@@ -70,6 +111,16 @@ class AbwParser:
 
     @staticmethod
     def parse_publication_title_data(title: str) -> PublicationTitleData:
+        """
+        Parse a publication title string into structured data.
+
+        This method splits a given title string into its components:
+        brand, model, generation, and year. It returns an instance of
+        PublicationTitleData containing this information.
+
+        :param title: A string representing the publication title.
+        :return: An instance of PublicationTitleData containing parsed data.
+        """
         title_data_parts = title.split(" ")
 
         brand = title_data_parts[0]
@@ -83,6 +134,20 @@ class AbwParser:
 
     @staticmethod
     def parse_publication_other_data(other_data: str) -> PublicationOtherData:
+        """
+        Parse additional publication data from a string.
+
+        This method extracts various attributes related to the vehicle
+        from a given string, including engine type, horsepower,
+        engine volume, transmission type, drive type, mileage, and
+        body type. It uses regular expressions to find these attributes
+        in the input string.
+
+        :param other_data: A string containing additional information
+                           about the vehicle.
+        :return: An instance of PublicationOtherData containing the
+                 extracted attributes.
+        """
         engine_type = ""
         engine_hp = ""
         engine_volume = ""
@@ -125,6 +190,17 @@ class AbwParser:
         return pub_other_data
 
     def get_publications_data(self, pages: int) -> None:
+        """
+        Retrieve and process publication data from multiple pages.
+
+        This method iterates through the specified number of pages,
+        retrieves publication data from each page, and processes each
+        publication item. It extracts relevant information and saves
+        it as instances of the Publication class.
+
+        :param pages: An integer representing the total number of pages
+                      to retrieve data from.
+        """
         for p in range(1, pages + 1):
             data = self.get_page_data(p)
             for item in data["list"]:
@@ -167,13 +243,40 @@ class AbwParser:
             sleep(2)
 
     def save_publication(self, pub) -> None:
+        """
+        Save a publication instance to the internal list.
+
+        This method appends a given publication instance to the internal
+        list of publications for later processing or storage.
+
+        :param pub: An instance of the Publication class to be saved.
+        """
         self.publications.append(pub)
 
     def save_json(self) -> None:
+        """
+        Save all collected publications to a JSON file.
+
+        This method serializes the internal list of publications into JSON
+        format and writes it to a file named "data.json".
+
+        :return: None
+        """
         with open("data.json", 'w') as file:
             data = json.dumps(self.publications, indent=4)
             file.write(data)
 
     def get_data(self) -> list:
+        """
+        Retrieve publication data and return a list of publications.
+
+        This method calls the get_publications_data method to fetch
+        publication data from the specified number of pages. After
+        retrieving the data, it returns the internal list of
+        publications.
+
+        :return: A list of Publication instances containing the
+                 retrieved publication data.
+        """
         self.get_publications_data(pages=2)
         return self.publications
