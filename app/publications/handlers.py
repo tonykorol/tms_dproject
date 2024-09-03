@@ -3,9 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.handlers import get_current_user
 from app.publications.schemas import AllPublicationsSchema, PublicationSchema, AllPricesSchema, FavoriteSchema, \
-    AllFavoritesSchema
+    AllFavoritesSchema, TgTokenResponseSchema
 from app.publications.services.favorites import add_to_fav, delete_favorite, get_favorites
 from app.publications.services.publications import get_publications, get_one_publication, get_all_prices
+from app.publications.services.tg import get_telegram_bot_token
 from database.database import get_async_api_session
 from database.models import User
 
@@ -26,6 +27,13 @@ async def get_all_favorites(
     """Get all Favorites from current User"""
     favorites = await get_favorites(user, session)
     return {"favorites": favorites}
+
+@router.get("/favorites/token", tags=["Favorites"], response_model=TgTokenResponseSchema)
+async def get_tg_token(
+        user: User = Depends(get_current_user),
+):
+    """Get telegram connect token"""
+    return await get_telegram_bot_token(user)
 
 @router.get("/{pub_id}", response_model=PublicationSchema)
 async def get_publication(pub_id: int, session: AsyncSession = Depends(get_async_api_session)):

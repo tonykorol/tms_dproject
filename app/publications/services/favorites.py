@@ -33,6 +33,7 @@ async def add_to_fav(pub_id: int, user: User, session: AsyncSession) -> Favorite
     await session.refresh(favorite)
     return favorite
 
+
 async def delete_favorite(pub_id: int, user: User, session: AsyncSession) -> dict:
     result = await session.execute(
         select(Favorite).join(Favorite.users).filter(Favorite.publication_id == pub_id, User.id == user.id)

@@ -63,3 +63,9 @@ class AllPublicationsSchema(BaseModel):
 
 class AllFavoritesSchema(BaseModel):
     favorites: list[FavoriteSchema]
+
+
+class TgTokenResponseSchema(BaseModel):
+    token: str
+    link: str
+    message: str

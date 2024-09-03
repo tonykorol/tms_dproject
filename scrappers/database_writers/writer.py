@@ -7,10 +7,12 @@ from database.database import get_async_session
 from scrappers.data_classes import Publication as PublicationData
 from database.models import Publication as PublicationModel, PublicationPrice, Site, CarModel, PublicationImage
 from scrappers.notifications.sender import sender
+from scrappers.notifications.tg.tg import update_user_tg_ids
 
 
 async def save_publications(data: PublicationData) -> None:
     async with get_async_session() as session:
+        await update_user_tg_ids(session)
         await update_publications_status(data, session)
         for item in data:
             publication = await session.execute(
