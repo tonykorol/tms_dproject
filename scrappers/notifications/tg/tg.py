@@ -21,7 +21,8 @@ async def update_user_tg_ids() -> None:
         for chat_id, user_id in ids.items():
             result = await session.execute(select(User).filter(User.id == user_id))
             user = result.unique().scalars().first()
-            user.tg_chat_id = chat_id
+            if user is not None:
+                user.tg_chat_id = chat_id
         await session.commit()
 
 

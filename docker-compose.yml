@@ -1,0 +1,51 @@
+version: '3.7'
+
+services:
+  web-app:
+    build: .
+    restart: always
+    entrypoint: "/api_app/docker_run/start.sh"
+    env_file: .env-non-dev
+    ports:
+      - "8088:8088"
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:13
+    container_name: db_app
+    command: -p 5555
+    env_file: .env-non-dev
+    expose:
+      - 5555
+    ports:
+      - "5555:5555"
+    volumes:
+       - postgres_data:/var/lib/postgresql/data/
+
+  redis:
+    image: redis:7
+    container_name: redis_app
+    command: --port 5370
+    expose:
+      - 5370
+
+  celery:
+    build: .
+    container_name: celery_app
+    env_file: .env-non-dev
+    entrypoint: "/api_app/docker_run/celery.sh"
+    depends_on:
+      - redis
+
+  celery-beat:
+    build: .
+    container_name: celery_beat_app
+    env_file: .env-non-dev
+    entrypoint: "/api_app/docker_run/celery_beat.sh"
+    depends_on:
+      - redis
+
+volumes:
+  postgres_data:

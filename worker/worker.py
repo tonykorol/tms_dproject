@@ -10,7 +10,7 @@ from config import REDIS_HOST, REDIS_PORT
 from scrappers.notifications.tg.tg import update_user_tg_ids
 from scrappers.run import run
 
-celery = Celery('tasks', broker=f'{REDIS_HOST}://localhost:{REDIS_PORT}/')
+celery = Celery('tasks', broker=f'redis://{REDIS_HOST}:{REDIS_PORT}/')
 
 celery.conf.update(
     timezone='UTC',

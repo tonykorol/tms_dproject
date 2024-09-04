@@ -1,10 +1,9 @@
 import re
 import json
-from datetime import timedelta, UTC
+from datetime import timedelta, UTC, datetime
 
 from random import choice
 
-from black import datetime
 from requests import get
 from time import sleep
 
