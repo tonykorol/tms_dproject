@@ -13,9 +13,8 @@ async def get_telegram_bot_token(user: User) -> dict:
     message = "fДля подключения уведомлений от бота перейдите по ссылке и отправьте боту код"
     token = await create_token(user)
     link = "https://t.me/CarNotification_bot"
-    return {"token": token,
-            "link": link,
-            "message": message}
+    return {"token": token, "link": link, "message": message}
+
 
 async def create_token(user: User) -> str:
     """

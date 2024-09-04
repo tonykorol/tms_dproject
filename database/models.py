@@ -35,16 +35,19 @@ class Publication(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     site_id: Mapped[int] = mapped_column(ForeignKey("sites.id"))
-    site: Mapped["Site"] = relationship(back_populates="publications", lazy='joined')
+    site: Mapped["Site"] = relationship(back_populates="publications", lazy="joined")
 
-    prices: Mapped[List["PublicationPrice"]] = relationship(back_populates="publication", lazy='joined', cascade="all, delete")
-    images: Mapped[List["PublicationImage"]] = relationship(back_populates="publication", lazy='joined', cascade="all, delete")
+    prices: Mapped[List["PublicationPrice"]] = relationship(
+        back_populates="publication", lazy="joined", cascade="all, delete"
+    )
+    images: Mapped[List["PublicationImage"]] = relationship(
+        back_populates="publication", lazy="joined", cascade="all, delete"
+    )
 
     car_model_id: Mapped[int] = mapped_column(ForeignKey("car_models.id"))
-    car_model: Mapped[List["CarModel"]] = relationship(back_populates="publications",  lazy='joined')
+    car_model: Mapped[List["CarModel"]] = relationship(back_populates="publications", lazy="joined")
 
     favorites: Mapped[List["Favorite"]] = relationship(back_populates="publication", cascade="all, delete")
-
 
 
 class PublicationPrice(Base):
@@ -55,7 +58,7 @@ class PublicationPrice(Base):
     price_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     publication_id: Mapped[int] = mapped_column(ForeignKey("publications.id"))
-    publication: Mapped["Publication"] = relationship(back_populates="prices",  lazy='joined')
+    publication: Mapped["Publication"] = relationship(back_populates="prices", lazy="joined")
 
 
 class PublicationImage(Base):
@@ -65,7 +68,7 @@ class PublicationImage(Base):
     url: Mapped[str] = mapped_column(String)
 
     publication_id: Mapped[int] = mapped_column(ForeignKey("publications.id"))
-    publication: Mapped["Publication"] = relationship(back_populates="images", lazy='joined')
+    publication: Mapped["Publication"] = relationship(back_populates="images", lazy="joined")
 
 
 class CarModel(Base):
@@ -79,7 +82,6 @@ class CarModel(Base):
     publications: Mapped[List["Publication"]] = relationship(back_populates="car_model", cascade="all, delete")
 
 
-
 class Favorite(Base):
     __tablename__ = "favorites"
 
@@ -87,9 +89,9 @@ class Favorite(Base):
     added_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.now(UTC))
 
     publication_id: Mapped[int] = mapped_column(ForeignKey("publications.id"))
-    publication: Mapped["Publication"] = relationship(back_populates="favorites",  lazy='joined')
+    publication: Mapped["Publication"] = relationship(back_populates="favorites", lazy="joined")
 
-    users: Mapped[list["User"]] = relationship(secondary="users_favorites", back_populates="favorites", lazy='joined')
+    users: Mapped[list["User"]] = relationship(secondary="users_favorites", back_populates="favorites", lazy="joined")
 
 
 class UsersFavorites(Base):
@@ -105,11 +107,13 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(String(150), unique=True)
     email: Mapped[str] = mapped_column(String(length=320), unique=True, index=True, nullable=False)
-    hashed_password: Mapped[str] = mapped_column( String(length=1024), nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(length=1024), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     registered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.now(UTC))
     tg_chat_id: Mapped[int] = mapped_column(Integer, nullable=True)
 
-    favorites: Mapped[list["Favorite"]] = relationship(secondary="users_favorites", back_populates="users", lazy='joined', cascade="all, delete")
+    favorites: Mapped[list["Favorite"]] = relationship(
+        secondary="users_favorites", back_populates="users", lazy="joined", cascade="all, delete"
+    )

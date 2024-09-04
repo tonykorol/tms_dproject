@@ -11,7 +11,7 @@ import locale
 
 from scrappers.data_classes import Publication, CarModel, PublicationOtherData, PublicationTitleData
 
-locale.setlocale(locale.LC_ALL, '')
+locale.setlocale(locale.LC_ALL, "")
 
 
 class AbwParser:
@@ -100,7 +100,7 @@ class AbwParser:
         try:
             date = datetime.strptime(string, "%d %B %Y")
         except ValueError:
-            if string.split(' ')[0] == "вчера":
+            if string.split(" ")[0] == "вчера":
                 day_now = (datetime.now(UTC) - timedelta(days=1)).strftime("%d")
                 month_now: int = (datetime.now(UTC) - timedelta(days=1)).strftime("%B")
             else:
@@ -124,12 +124,10 @@ class AbwParser:
 
         brand = title_data_parts[0]
         model = title_data_parts[1]
-        generation = "".join(title_data_parts[2:(len(title_data_parts) - 1)])[:-1]
+        generation = "".join(title_data_parts[2 : (len(title_data_parts) - 1)])[:-1]
         year_part = title_data_parts[len(title_data_parts) - 1][:4]
         year = int(year_part) if len(year_part) == 4 else None
-        title_data = PublicationTitleData(
-            brand, model, generation, year
-        )
+        title_data = PublicationTitleData(brand, model, generation, year)
         return title_data
 
     @staticmethod
@@ -156,31 +154,34 @@ class AbwParser:
         mileage = ""
         body_type = ""
 
-        if mileage_match := re.search(r'(\d+(\s\d+)?)\s*км', other_data):
+        if mileage_match := re.search(r"(\d+(\s\d+)?)\s*км", other_data):
             mileage = mileage_match.group(1)
 
-        if engine_volume_match := re.search(r'(\d+(\.\d+)?)\s*л', other_data):
+        if engine_volume_match := re.search(r"(\d+(\.\d+)?)\s*л", other_data):
             engine_volume = engine_volume_match.group(1)
 
-        if engine_hp_match := re.search(r'(\d+)\s*л\.с\.', other_data):
+        if engine_hp_match := re.search(r"(\d+)\s*л\.с\.", other_data):
             engine_hp = engine_hp_match.group(1)
 
-        if engine_type_match := re.search(r'(?<=\s)(бензин|дизель|электро|газ|гибрид|гидроген)(?=\s)', other_data):
+        if engine_type_match := re.search(r"(?<=\s)(бензин|дизель|электро|газ|гибрид|гидроген)(?=\s)", other_data):
             engine_type = engine_type_match.group(0)
 
-        if transmission_type_match := re.search(r'(?<=\s)(автомат|механика|робот|вариатор)(?=\s)', other_data):
+        if transmission_type_match := re.search(r"(?<=\s)(автомат|механика|робот|вариатор)(?=\s)", other_data):
             transmission_type = transmission_type_match.group(0)
 
-        if drive_match := re.search(r'(?<=\s)(полный|передний|задний)(?=\s)', other_data):
+        if drive_match := re.search(r"(?<=\s)(полный|передний|задний)(?=\s)", other_data):
             drive = drive_match.group(0)
 
-        pattern = re.compile(r'''
+        pattern = re.compile(
+            r"""
             (?<=\s)
             (внедорожник|кабриолет|купе|лимузин|
              лифтбек|микроавтобус/бус|минивен|пикап|
              универсал|седан|фургон|хэтчбек)
             (?=\s)
-        ''', re.VERBOSE)
+        """,
+            re.VERBOSE,
+        )
         if body_type_match := re.search(pattern, other_data):
             body_type = body_type_match.group(0)
 
@@ -207,7 +208,7 @@ class AbwParser:
                 if isinstance(item["id"], int):
                     publication_id = item["id"]
                     publication_images = item["images"]
-                    publication_price = int(item["price"]["usd"][:-4].replace(' ',''))
+                    publication_price = int(item["price"]["usd"][:-4].replace(" ", ""))
                     publication_link = f'{self.SITE_URL}{item["link"]}'
                     publication_description = item["text"]
                     publication_date = self.get_publication_date(item["date"])
@@ -262,7 +263,7 @@ class AbwParser:
 
         :return: None
         """
-        with open("data.json", 'w') as file:
+        with open("data.json", "w") as file:
             data = json.dumps(self.publications, indent=4)
             file.write(data)
 
@@ -278,5 +279,6 @@ class AbwParser:
         :return: A list of Publication instances containing the
                  retrieved publication data.
         """
-        self.get_publications_data(pages=1)
+        pages = self.get_pages_list()
+        self.get_publications_data(pages=pages)
         return self.publications

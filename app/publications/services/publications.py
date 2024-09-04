@@ -22,6 +22,7 @@ async def get_publications(session: AsyncSession) -> list[PublicationSchema]:
         raise HTTPException(status_code=404, detail="Publications not found")
     return publications
 
+
 async def get_one_publication(pub_id: int, session: AsyncSession) -> PublicationSchema:
     """
     Retrieves a single publication by its ID.
@@ -39,7 +40,8 @@ async def get_one_publication(pub_id: int, session: AsyncSession) -> Publication
         raise HTTPException(status_code=404, detail="Publication not found")
     return publication
 
-async def get_all_prices(pub_id:int, session: AsyncSession) -> list[PricesSchema]:
+
+async def get_all_prices(pub_id: int, session: AsyncSession) -> list[PricesSchema]:
     """
     Retrieves all prices associated with a specific publication.
 
@@ -50,9 +52,7 @@ async def get_all_prices(pub_id:int, session: AsyncSession) -> list[PricesSchema
 
     :raises HTTPException: If the publication is not found (404).
     """
-    result = await session.execute(
-        select(Publication).filter(Publication.id == pub_id)
-    )
+    result = await session.execute(select(Publication).filter(Publication.id == pub_id))
     publication = result.scalars().first()
     if publication is None:
         raise HTTPException(status_code=404, detail="Publication not found")

@@ -22,9 +22,7 @@ async def save_publications(data: PublicationData) -> None:
     async with scoped_session() as session:
         await update_publications_status(data, session)
         for item in data:
-            publication = await session.execute(
-                select(PublicationModel).filter_by(publication_id=item.id)
-            )
+            publication = await session.execute(select(PublicationModel).filter_by(publication_id=item.id))
             publication = publication.unique().scalars().first()
             if publication is not None:
                 await upgrade_pub_data(publication, item, session)
@@ -35,6 +33,7 @@ async def save_publications(data: PublicationData) -> None:
             await save_images(item, new_publication, session)
             await save_price(new_publication, item, session)
         await session.commit()
+
 
 async def update_publications_status(current_publications: PublicationData, session: AsyncSession) -> None:
     """
@@ -52,6 +51,7 @@ async def update_publications_status(current_publications: PublicationData, sess
     for pub in existing_publications:
         if pub.id not in current_ids:
             pub.is_active = False
+
 
 async def get_site(item: PublicationData, session: AsyncSession) -> Site:
     """
@@ -72,6 +72,7 @@ async def get_site(item: PublicationData, session: AsyncSession) -> Site:
         session.add(site)
     return site
 
+
 async def get_car_model(item: PublicationData, session: AsyncSession) -> CarModel:
     """
     Retrieve or create a car model based on the provided item.
@@ -87,11 +88,13 @@ async def get_car_model(item: PublicationData, session: AsyncSession) -> CarMode
     car_brand_name = item.car_model.brand
     car_model_name = item.car_model.model
     car_generation_name = item.car_model.generation
-    car_model = await session.execute(select(CarModel).filter_by(
-        brand=car_brand_name,
-        model=car_model_name,
-        generation=car_generation_name,
-    ))
+    car_model = await session.execute(
+        select(CarModel).filter_by(
+            brand=car_brand_name,
+            model=car_model_name,
+            generation=car_generation_name,
+        )
+    )
     car_model = car_model.unique().scalars().first()
     if not car_model:
         car_model = CarModel(
@@ -102,7 +105,10 @@ async def get_car_model(item: PublicationData, session: AsyncSession) -> CarMode
         session.add(car_model)
     return car_model
 
-async def add_publication(item: PublicationData, site: Site, car_model: CarModel, session: AsyncSession) -> PublicationModel:
+
+async def add_publication(
+    item: PublicationData, site: Site, car_model: CarModel, session: AsyncSession
+) -> PublicationModel:
     """
     Add a new publication to the database.
     This function creates a new PublicationModel instance and adds
@@ -132,6 +138,7 @@ async def add_publication(item: PublicationData, site: Site, car_model: CarModel
     session.add(publication)
     return publication
 
+
 async def save_images(item: PublicationData, publication: PublicationModel, session: AsyncSession) -> None:
     """
     Save images associated with a publication.
@@ -144,11 +151,9 @@ async def save_images(item: PublicationData, publication: PublicationModel, sess
     :param session: Database session for executing queries.
     """
     for img in item.images:
-        image = PublicationImage(
-            url=img,
-            publication=publication
-        )
+        image = PublicationImage(url=img, publication=publication)
         session.add(image)
+
 
 async def save_price(publication: PublicationModel, item: PublicationData, session: AsyncSession) -> None:
     """
@@ -168,6 +173,7 @@ async def save_price(publication: PublicationModel, item: PublicationData, sessi
     )
     session.add(price)
 
+
 async def upgrade_pub_data(publication: PublicationModel, new_data: PublicationData, session: AsyncSession) -> None:
     """
     Updates the publication data and adds a new price if it has changed.
@@ -179,7 +185,11 @@ async def upgrade_pub_data(publication: PublicationModel, new_data: PublicationD
     :return: None. The function modifies the publication state and adds a new price to the database
              if the price has changed.
     """
-    result = await session.execute(select(PublicationPrice).filter(PublicationPrice.publication_id == publication.id).order_by(PublicationPrice.price_date.desc()))
+    result = await session.execute(
+        select(PublicationPrice)
+        .filter(PublicationPrice.publication_id == publication.id)
+        .order_by(PublicationPrice.price_date.desc())
+    )
     exist_price = result.unique().scalars().first()
     current_price = new_data.price
     publication.is_active = True

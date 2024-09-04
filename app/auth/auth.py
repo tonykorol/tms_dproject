@@ -8,6 +8,7 @@ from database.models import User
 
 cookie_transport = CookieTransport(cookie_max_age=3600)
 
+
 def get_jwt_strategy() -> JWTStrategy:
     """
     Get the JWT strategy for authentication.
@@ -15,6 +16,7 @@ def get_jwt_strategy() -> JWTStrategy:
     :return: JWTStrategy: Configured JWT strategy with the specified secret and lifetime.
     """
     return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
+
 
 auth_backend = AuthenticationBackend(
     name="jwt",

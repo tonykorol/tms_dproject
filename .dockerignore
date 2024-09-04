@@ -122,7 +122,8 @@ celerybeat.pid
 
 # Environments
 .env
-.env-non-dev
+.env_db
+.env_web-app
 .venv
 env/
 venv/
@@ -166,5 +167,3 @@ desc.txt
 for_dev.txt
 s.py
 /scrappers/av_by/
-logs.log
-looogs.log

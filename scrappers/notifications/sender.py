@@ -7,6 +7,7 @@ from config import TG_BOT_TOKEN
 from database.models import PublicationPrice, User, Favorite
 from database.models import Publication
 
+
 async def sender(publication: Publication, price: PublicationPrice, session: AsyncSession):
     """
     Sends a notification about a price change in a publication to users who have favorited it.
@@ -23,6 +24,7 @@ async def sender(publication: Publication, price: PublicationPrice, session: Asy
     for chat_id in chat_ids:
         await send_notification(chat_id, message)
 
+
 async def get_users(publication: Publication, session: AsyncSession) -> list[User]:
     """
     Retrieves users who have favorited a specific publication.
@@ -33,7 +35,7 @@ async def get_users(publication: Publication, session: AsyncSession) -> list[Use
     :return: A list of User objects who have favorited the publication.
     """
     result = await session.execute(select(User).join(Favorite.users).filter(Favorite.publication_id == publication.id))
-    users = result.unique().scalars().all() # []
+    users = result.unique().scalars().all()  # []
     return users
 
 

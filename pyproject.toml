@@ -26,8 +26,8 @@ gunicorn = "^23.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
-black = "^24.8.0"
 flake8 = "^7.1.1"
+black = "^24.8.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -36,7 +36,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 line-length = 120
 target-version = ['py312']
-include = '\pyu?$'
+include = '\.pyi?$'
 
 [tool.flake8]
 exclude = ['tests', '.venv', 'venv', 'deploy', 'tmp_*.py']

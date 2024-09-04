@@ -19,21 +19,16 @@ async def add_to_fav(pub_id: int, user: User, session: AsyncSession) -> Favorite
 
     :raises HTTPException: If the publication is not found (404) or is already in favorites (400).
     """
-    result = await session.execute(
-        select(Publication).filter(Publication.id == pub_id)
-    )
+    result = await session.execute(select(Publication).filter(Publication.id == pub_id))
     publication = result.scalars().first()
     if publication is None:
         raise HTTPException(status_code=404, detail="Publication not found")
     existing_favorite = await session.execute(
-        select(Favorite).join(Favorite.users)
-        .filter(Favorite.publication_id == pub_id, User.id == user.id)
+        select(Favorite).join(Favorite.users).filter(Favorite.publication_id == pub_id, User.id == user.id)
     )
     if existing_favorite.scalars().first() is not None:
         raise HTTPException(status_code=400, detail="Publication already in favorites")
-    result = await session.execute(
-        select(Publication).filter(Publication.id == pub_id)
-    )
+    result = await session.execute(select(Publication).filter(Publication.id == pub_id))
     publication = result.scalars().first()
     favorite = Favorite(
         publication_id=publication.id,
@@ -67,6 +62,7 @@ async def delete_favorite(pub_id: int, user: User, session: AsyncSession) -> dic
     await session.commit()
     return {"status": True}
 
+
 async def get_favorites(user: User, session: AsyncSession) -> list[FavoriteSchema]:
     """
     Retrieves the list of favorite publications for the specified user.
@@ -76,8 +72,6 @@ async def get_favorites(user: User, session: AsyncSession) -> list[FavoriteSchem
 
     :return: A list of FavoriteSchema objects representing the favorite publications.
     """
-    result = await session.execute(
-        select(Favorite).join(Favorite.users).filter(User.id == user.id)
-    )
+    result = await session.execute(select(Favorite).join(Favorite.users).filter(User.id == user.id))
     favorites = result.unique().scalars().all()
     return favorites

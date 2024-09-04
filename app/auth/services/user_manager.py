@@ -14,6 +14,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
 
     Inherits from IntegerIDMixin and BaseUserManager to manage users with integer IDs.
     """
+
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
 

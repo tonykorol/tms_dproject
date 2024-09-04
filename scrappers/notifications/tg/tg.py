@@ -52,4 +52,3 @@ async def get_new_ids() -> dict:
                 continue
             ids[chat_id] = user_id
     return ids
-
