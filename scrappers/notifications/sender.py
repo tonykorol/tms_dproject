@@ -18,7 +18,7 @@ async def sender(publication: Publication, price: PublicationPrice, session: Asy
     :return: None. The function sends notifications to users.
     """
     users = await get_users(publication, session)
-    chat_ids = await get_chat_ids(users, session)
+    chat_ids = await get_chat_ids(users)
     message = await create_message(publication, price)
     for chat_id in chat_ids:
         await send_notification(chat_id, message)

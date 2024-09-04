@@ -1,10 +1,8 @@
-import asyncio
-
 from scrappers.abw_by.abw_scrapper import AbwParser
 from scrappers.database_writers.writer import save_publications
 
 
-if __name__ == "__main__":
+async def run():
     abw = AbwParser()
     abw_data = abw.get_data()
-    asyncio.run(save_publications(abw_data))
+    await save_publications(abw_data)

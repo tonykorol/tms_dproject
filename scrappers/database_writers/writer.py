@@ -3,32 +3,30 @@ from datetime import datetime, UTC
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.database import get_async_session
+from database.database import db_manager, scoped_session
 from scrappers.data_classes import Publication as PublicationData
 from database.models import Publication as PublicationModel, PublicationPrice, Site, CarModel, PublicationImage
 from scrappers.notifications.sender import sender
-from scrappers.notifications.tg.tg import update_user_tg_ids
 
 
 async def save_publications(data: PublicationData) -> None:
     """
     Save publications to the database.
 
-    This function updates user Telegram IDs, updates the status of
-    existing publications, and saves new publications along with
-    their associated data (images, prices, etc.) to the database.
+    This function updates the status of existing publications,
+    and saves new publications along with their associated
+    data (images, prices, etc.) to the database.
 
     :param data: PublicationData object containing publication details.
     """
-    async with get_async_session() as session:
-        await update_user_tg_ids(session)
+    async with scoped_session() as session:
         await update_publications_status(data, session)
         for item in data:
             publication = await session.execute(
                 select(PublicationModel).filter_by(publication_id=item.id)
             )
             publication = publication.unique().scalars().first()
-            if publication is not None and not publication.is_active:
+            if publication is not None:
                 await upgrade_pub_data(publication, item, session)
                 continue
             site = await get_site(item, session)
@@ -181,12 +179,12 @@ async def upgrade_pub_data(publication: PublicationModel, new_data: PublicationD
     :return: None. The function modifies the publication state and adds a new price to the database
              if the price has changed.
     """
-    current_price = await session.execute(select(PublicationPrice).filter(PublicationPrice.publication_id == publication.id).order_by(PublicationPrice.price_date.desc()))
-    current_price = current_price.unique().scalars().first()
-    exist_price = new_data.price
+    result = await session.execute(select(PublicationPrice).filter(PublicationPrice.publication_id == publication.id).order_by(PublicationPrice.price_date.desc()))
+    exist_price = result.unique().scalars().first()
+    current_price = new_data.price
     publication.is_active = True
     session.add(publication)
-    if current_price.price == exist_price:
+    if exist_price.price == current_price:
         return
     price = PublicationPrice(
         price=new_data.price,

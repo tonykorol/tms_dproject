@@ -1,13 +1,12 @@
 import requests
 from sqlalchemy import select
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from config import TG_BOT_TOKEN
+from database.database import scoped_session
 from database.models import User
 
 
-async def update_user_tg_ids(session: AsyncSession) -> None:
+async def update_user_tg_ids() -> None:
     """
     Updates the Telegram chat IDs for users in the database.
 
@@ -15,16 +14,15 @@ async def update_user_tg_ids(session: AsyncSession) -> None:
     If a user ID exists in the database, their corresponding Telegram
     chat ID is updated.
 
-    :param session: Asynchronous database session for executing operations.
-
     :return: None. The function modifies user records in the database.
     """
-    ids = await get_new_ids()
-    for chat_id, user_id in ids.items():
-        result = await session.execute(select(User).filter(User.id == user_id))
-        user = result.unique().scalars().first()
-        user.tg_chat_id = chat_id
-    await session.commit()
+    async with scoped_session() as session:
+        ids = await get_new_ids()
+        for chat_id, user_id in ids.items():
+            result = await session.execute(select(User).filter(User.id == user_id))
+            user = result.unique().scalars().first()
+            user.tg_chat_id = chat_id
+        await session.commit()
 
 
 async def get_new_ids() -> dict:
@@ -54,4 +52,3 @@ async def get_new_ids() -> dict:
             ids[chat_id] = user_id
     return ids
 
-# asyncio.run(get_new_ids())

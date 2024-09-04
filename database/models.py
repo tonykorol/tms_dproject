@@ -31,7 +31,7 @@ class Publication(Base):
     transmission_type: Mapped[str] = mapped_column(String(10))
     car_drive: Mapped[str] = mapped_column(String(20))
     mileage: Mapped[str] = mapped_column(String(10))
-    car_year: Mapped[int] = mapped_column(Integer)
+    car_year: Mapped[int] = mapped_column(Integer, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     site_id: Mapped[int] = mapped_column(ForeignKey("sites.id"))
@@ -74,7 +74,7 @@ class CarModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     brand: Mapped[str] = mapped_column(String(20))
     model: Mapped[str] = mapped_column(String(20))
-    generation: Mapped[str] = mapped_column(String(30))
+    generation: Mapped[str] = mapped_column(String(40))
 
     publications: Mapped[List["Publication"]] = relationship(back_populates="car_model", cascade="all, delete")
 

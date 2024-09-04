@@ -126,7 +126,8 @@ class AbwParser:
         brand = title_data_parts[0]
         model = title_data_parts[1]
         generation = "".join(title_data_parts[2:(len(title_data_parts) - 1)])[:-1]
-        year = int(title_data_parts[len(title_data_parts) - 1][:4])
+        year_part = title_data_parts[len(title_data_parts) - 1][:4]
+        year = int(year_part) if len(year_part) == 4 else None
         title_data = PublicationTitleData(
             brand, model, generation, year
         )
@@ -278,5 +279,5 @@ class AbwParser:
         :return: A list of Publication instances containing the
                  retrieved publication data.
         """
-        self.get_publications_data(pages=2)
+        self.get_publications_data(pages=1)
         return self.publications

@@ -20,6 +20,8 @@ pydantic = {extras = ["email"], version = "^2.8.2"}
 passlib = "^1.7.4"
 asyncpg = "^0.29.0"
 fastapi-users = {extras = ["sqlalchemy"], version = "^13.0.0"}
+celery = "^5.4.0"
+redis = "^5.0.8"
 
 
 [tool.poetry.group.dev.dependencies]
