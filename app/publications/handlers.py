@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.handlers import get_current_user
@@ -20,9 +20,13 @@ router = APIRouter(prefix="/adverts", tags=["Adverts"])
 
 
 @router.get("/", response_model=AllPublicationsSchema)
-async def get_all_publications(session: AsyncSession = Depends(get_async_session)):
+async def get_all_publications(
+        session: AsyncSession = Depends(get_async_session),
+        page: int = Query(ge=0, default=0),
+        size: int = Query(ge=1, le=100, default=20)
+):
     """Get All Publications"""
-    publications = await get_publications(session)
+    publications = await get_publications(page, size, session)
     return {"publications": publications}
 
 

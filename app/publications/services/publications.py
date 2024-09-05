@@ -6,18 +6,23 @@ from app.publications.schemas import PublicationSchema, PricesSchema
 from database.models import Publication, PublicationPrice
 
 
-async def get_publications(session: AsyncSession) -> list[PublicationSchema]:
+async def get_publications(page: int, size:int, session: AsyncSession) -> list[PublicationSchema]:
     """
     Retrieves a list of active publications.
 
+    :param page: Number of page.
+    :param size: Number of posts per page.
     :param session: The asynchronous database session.
 
     :return: A list of PublicationSchema objects representing active publications.
 
     :raises HTTPException: If no active publications are found (404).
     """
+    offset_min = page * size
+    offset_max = (page + 1) * size
     result = await session.execute(select(Publication).filter(Publication.is_active == True))
     publications = result.unique().scalars().all()
+    publications = publications[offset_min:offset_max]
     if publications is None:
         raise HTTPException(status_code=404, detail="Publications not found")
     return publications
