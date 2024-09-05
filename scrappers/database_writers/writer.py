@@ -3,7 +3,7 @@ from datetime import datetime, UTC
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.database import db_manager, scoped_session
+from database.database import scoped_session
 from scrappers.data_classes import Publication as PublicationData
 from database.models import Publication as PublicationModel, PublicationPrice, Site, CarModel, PublicationImage
 from scrappers.notifications.sender import sender
@@ -19,6 +19,7 @@ async def save_publications(data: PublicationData) -> None:
 
     :param data: PublicationData object containing publication details.
     """
+    print("START WRITING IN DATABASE")
     async with scoped_session() as session:
         await update_publications_status(data, session)
         for item in data:
@@ -33,6 +34,8 @@ async def save_publications(data: PublicationData) -> None:
             await save_images(item, new_publication, session)
             await save_price(new_publication, item, session)
         await session.commit()
+    print("END WRITING IN DATABASE")
+
 
 
 async def update_publications_status(current_publications: PublicationData, session: AsyncSession) -> None:

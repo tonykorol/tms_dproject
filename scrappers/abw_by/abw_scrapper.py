@@ -2,9 +2,10 @@ import re
 import json
 from datetime import timedelta, UTC, datetime
 
-from random import choice
+from random import choice, randint
 
 from requests import get
+from requests.exceptions import ConnectionError
 from time import sleep
 
 import locale
@@ -202,8 +203,13 @@ class AbwParser:
         :param pages: An integer representing the total number of pages
                       to retrieve data from.
         """
+        print("START PARSING ABW.BY")
         for p in range(1, pages + 1):
-            data = self.get_page_data(p)
+            try:
+                data = self.get_page_data(p)
+            except ConnectionError as e:
+                print(f"ERROR\nPAGE {p}\n{e}\nCONTINUE")
+                continue
             for item in data["list"]:
                 if isinstance(item["id"], int):
                     publication_id = item["id"]
@@ -241,7 +247,8 @@ class AbwParser:
                         site_url=self.SITE_URL,
                     )
                     self.save_publication(publication)
-            sleep(2)
+            sleep(randint(1, 5))
+        print("END PARSING ABW.BY")
 
     def save_publication(self, pub) -> None:
         """

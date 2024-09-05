@@ -2,7 +2,7 @@ import asyncio
 import logging
 from datetime import timedelta
 
-from celery.signals import after_setup_logger
+from celery.signals import after_setup_logger, worker_ready
 
 from celery import Celery
 
@@ -43,6 +43,11 @@ def run_upd_tg():
 def run_parse():
     result = loop.run_until_complete(run())
     return result
+
+@worker_ready.connect
+def at_start(sender, **k):
+    with sender.app.connection() as conn:
+        sender.app.send_task('worker.worker.run_parse', connection=conn,)
 
 
 celery.conf.beat_schedule = {
