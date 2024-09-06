@@ -208,7 +208,6 @@ class AbwParser:
             try:
                 data = self.get_page_data(p)
             except ConnectionError as e:
-                print(f"ERROR\nPAGE {p}\n{e}\nCONTINUE")
                 continue
             for item in data["list"]:
                 if isinstance(item["id"], int):
